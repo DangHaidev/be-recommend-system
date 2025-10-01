@@ -1,37 +1,16 @@
-import { Column, Entity } from 'typeorm';
+import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
 
-@Entity({ name: 'cities' })
+@Entity()
 export class User {
+    @PrimaryGeneratedColumn()
+    id: number;
+
     @Column()
-    name: string;
+    firstName: string;
 
-    @Column({ type: 'text' })
+    @Column()
+    lastName: string;
+
+    @Column({ unique: true })
     email: string;
-
-    @Column({})
-    password: string;
-
-    // @Column({})
-    // phone: string;
-
-    // @Column({})
-    // address: string;
-
-    // @Column({})
-    // image: string;
-
-    // @Column({})
-    // role: string;
-
-    // @Column({})
-    // accountType: string;
-
-    @Column({ type: 'boolean', default: false })
-    isActive: boolean;
-
-    // @Column({})
-    // codeId: string;
-
-    // @Column({})
-    // codeExpired: Date;
 }
