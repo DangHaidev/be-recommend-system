@@ -6,11 +6,35 @@ export class User {
     id: number;
 
     @Column()
-    firstName: string;
-
-    @Column()
-    lastName: string;
+    name: string;
 
     @Column({ unique: true })
     email: string;
+
+    @Column()
+    password: string;
+
+    @Column({ nullable: true })
+    phone: string;
+
+    @Column({ nullable: true })
+    address: string;
+
+    @Column({ nullable: true })
+    image: string;
+
+    @Column({ default: 'USER' })
+    role: string;
+
+    @Column({ default: 'LOCAL' })
+    accountType: string;
+
+    @Column({ default: false })
+    isActive: boolean;
+
+    @Column({ nullable: true })
+    codeId: string;
+
+    @Column({ nullable: true })
+    codeExpired: Date;
 }

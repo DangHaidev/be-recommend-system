@@ -4,6 +4,7 @@ import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
+import { hashPasswordhelper } from '../../helper/util';
 
 @Injectable()
 export class UserService {
@@ -14,18 +15,23 @@ export class UserService {
 
     // create user
     async create(createUserDto: CreateUserDto): Promise<User> {
-        const { email } = createUserDto;
+        const { name, email, password } = createUserDto;
 
         //check if email exist
         const existingUser = await this.userRepository.findOne({
             where: { email },
         });
-
+        //hashpass
+        const hashPassword = await hashPasswordhelper(password);
         if (existingUser) {
             throw new BadRequestException({ message: 'Email already exist' });
         }
 
-        const newUser = this.userRepository.create(createUserDto);
+        const newUser = this.userRepository.create({
+            name,
+            email,
+            password: hashPassword,
+        });
         return await this.userRepository.save(newUser);
     }
 
