@@ -5,10 +5,11 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './modules/users/users.module';
 import { User } from './modules/users/entities/user.entity';
+import { AuthModule } from './auth/auth.module';
 
 @Module({
     imports: [
-        ConfigModule.forRoot(),
+        ConfigModule.forRoot({ isGlobal: true }),
         TypeOrmModule.forRootAsync({
             imports: [ConfigModule],
             useFactory: (configService: ConfigService) => ({
@@ -24,6 +25,7 @@ import { User } from './modules/users/entities/user.entity';
             inject: [ConfigService],
         }),
         UserModule,
+        AuthModule,
     ],
     controllers: [AppController],
     providers: [AppService],
