@@ -1,6 +1,9 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import {
+    BadRequestException,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
-import { UpdateUserDto } from './dto/update-user.dto';
 import { InjectRepository } from '@nestjs/typeorm';
 import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
@@ -36,8 +39,18 @@ export class UserService {
     }
 
     //read all user
-    async findAll(): Promise<User[]> {
-        return await this.userRepository.find();
+    async findAll(page: number, pageSize: number): Promise<any> {
+        const [result, total] = await this.userRepository.findAndCount({
+            skip: (page - 1) * pageSize,
+            take: pageSize,
+        });
+
+        return {
+            data: result,
+            totalRecords: total,
+            totalPages: Math.ceil(total / pageSize),
+            currentPage: page,
+        };
     }
 
     //read single user
@@ -50,14 +63,14 @@ export class UserService {
     }
 
     //update user
-    async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
-        const user = await this.findOne(id);
+    async update(id: number, updateData: Partial<User>): Promise<User> {
+        const user = await this.userRepository.findOneBy({ id });
         if (!user) {
-            throw new BadRequestException({ message: 'User not found' });
+            throw new NotFoundException(`User with ID ${id} not found`);
         }
 
-        const updateUser = this.userRepository.merge(user, updateUserDto);
-        return await this.userRepository.save(updateUser);
+        Object.assign(user, updateData); // merge data
+        return this.userRepository.save(user);
     }
 
     //delete user
