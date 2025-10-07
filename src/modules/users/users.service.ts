@@ -11,12 +11,14 @@ import { v4 as uuidv4 } from 'uuid';
 import { hashPasswordhelper } from '../../helper/util';
 import { CreateAuthDto } from 'src/auth/dto/create-auth.dto';
 import dayjs from 'dayjs';
+import { MailerService } from '@nestjs-modules/mailer';
 
 @Injectable()
 export class UserService {
     constructor(
         @InjectRepository(User)
         private readonly userRepository: Repository<User>,
+        private readonly mailerService: MailerService,
     ) {}
 
     // create user
@@ -105,19 +107,30 @@ export class UserService {
         if (existingUser) {
             throw new BadRequestException({ message: 'Email already exist' });
         }
-
+        const activecodeId = uuidv4();
         const newUser = this.userRepository.create({
             name,
             email,
             password: hashPassword,
             isActive: false,
-            codeId: uuidv4(),
+            codeId: activecodeId,
             codeExpired: dayjs().add(30, 'minutes'),
         });
         await this.userRepository.save(newUser);
+        //send email
+        this.mailerService.sendMail({
+            to: newUser.email, // list of receivers
+            subject: 'Welcome to rcmsys', // Subject line
+            template: 'register',
+            context: {
+                // ✏️ filling curly brackets with content
+                name: newUser.name,
+                activationCode: activecodeId,
+            },
+        });
+
         return {
             id: newUser.id,
         };
-        //send email
     }
 }
