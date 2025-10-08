@@ -3,13 +3,15 @@ import {
     Get,
     Post,
     Body,
-    Patch,
     Param,
     Delete,
+    Query,
+    Put,
 } from '@nestjs/common';
 import { UserService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
+import { User } from './entities/user.entity';
 
 @Controller('user')
 export class UsersController {
@@ -22,13 +24,11 @@ export class UsersController {
     }
 
     @Get()
-    async findAll() {
-        const user = await this.userService.findAll();
-        return {
-            success: true,
-            user,
-            message: 'User read successfully',
-        };
+    async findAll(
+        @Query('page') page: number = 1,
+        @Query('pageSize') pageSize: number = 10,
+    ): Promise<User[]> {
+        return this.userService.findAll(page, pageSize);
     }
 
     @Get(':id')
@@ -40,18 +40,12 @@ export class UsersController {
             message: 'User read successfully',
         };
     }
-
-    @Patch(':id')
-    async update(
-        @Param('id') id: string,
+    @Put(':id')
+    update(
+        @Param('id') id: number,
         @Body() updateUserDto: UpdateUserDto,
-    ) {
-        const data = await this.userService.update(+id, updateUserDto);
-        return {
-            success: true,
-            data,
-            message: 'User updated successfully',
-        };
+    ): Promise<User> {
+        return this.userService.update(+id, updateUserDto);
     }
 
     @Delete(':id')

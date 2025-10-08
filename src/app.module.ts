@@ -5,10 +5,17 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { UserModule } from './modules/users/users.module';
 import { User } from './modules/users/entities/user.entity';
+import { AuthModule } from './auth/auth.module';
+import { APP_GUARD } from '@nestjs/core';
+import { JwtAuthGuard } from './auth/passport/jwt-auth.guard';
+import { MailerModule } from '@nestjs-modules/mailer';
+import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 
 @Module({
     imports: [
-        ConfigModule.forRoot(),
+        UserModule,
+        AuthModule,
+        ConfigModule.forRoot({ isGlobal: true }),
         TypeOrmModule.forRootAsync({
             imports: [ConfigModule],
             useFactory: (configService: ConfigService) => ({
@@ -23,9 +30,42 @@ import { User } from './modules/users/entities/user.entity';
             }),
             inject: [ConfigService],
         }),
-        UserModule,
+
+        MailerModule.forRootAsync({
+            imports: [ConfigModule],
+            useFactory: (configService: ConfigService) => ({
+                transport: {
+                    host: 'smtp.gmail.com',
+                    port: 465,
+                    // ignoreTLS: true,
+                    secure: true,
+                    auth: {
+                        user: configService.get('MAIL_USER'),
+                        pass: configService.get('MAIL_PASSWORD'),
+                    },
+                },
+                defaults: {
+                    from: '"No Reply" <no-reply@localhost>',
+                },
+                // preview: true,
+                template: {
+                    dir: process.cwd() + '/src/mail/templates/',
+                    adapter: new HandlebarsAdapter(), // or new PugAdapter() or new EjsAdapter()
+                    options: {
+                        strict: true,
+                    },
+                },
+            }),
+            inject: [ConfigService],
+        }),
     ],
     controllers: [AppController],
-    providers: [AppService],
+    providers: [
+        AppService,
+        {
+            provide: APP_GUARD,
+            useClass: JwtAuthGuard,
+        },
+    ],
 })
 export class AppModule {}
