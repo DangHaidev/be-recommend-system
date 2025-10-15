@@ -8,3 +8,9 @@ export class CreateAuthDto {
     @IsNotEmpty({ message: 'name không được để trống' })
     name: string;
 }
+export class CodeAuthDto {
+    @IsNotEmpty({ message: 'id không được để trống' })
+    id: number;
+    @IsNotEmpty({ message: 'code không được để trống' })
+    code: string;
+}

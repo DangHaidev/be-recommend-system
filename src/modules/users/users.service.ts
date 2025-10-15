@@ -9,7 +9,7 @@ import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { hashPasswordhelper } from '../../helper/util';
-import { CreateAuthDto } from 'src/auth/dto/create-auth.dto';
+import { CodeAuthDto, CreateAuthDto } from 'src/auth/dto/create-auth.dto';
 import dayjs from 'dayjs';
 import { MailerService } from '@nestjs-modules/mailer';
 
@@ -132,5 +132,16 @@ export class UserService {
         return {
             id: newUser.id,
         };
+    }
+    async handleActive(data: CodeAuthDto) {
+        const user = await this.userRepository.findOne({
+            where: { id: data.id, codeId: data.code },
+        });
+        if (!user) {
+            throw new BadRequestException('mã code không hợp lệ');
+        }
+
+        // check expire
+        return data;
     }
 }
