@@ -114,7 +114,8 @@ export class UserService {
             password: hashPassword,
             isActive: false,
             codeId: activecodeId,
-            codeExpired: dayjs().add(30, 'minutes'),
+            // codeExpired: dayjs().add(30, 'minute'),
+            codeExpired: dayjs().add(dayjs.duration({ days: 1 })),
         });
         await this.userRepository.save(newUser);
         //send email
@@ -142,6 +143,13 @@ export class UserService {
         }
 
         // check expire
-        return data;
+        const isBeforeCheck = dayjs().isBefore(user.codeExpired);
+
+        if (isBeforeCheck) {
+            await this.userRepository.update(user.id, { isActive: true });
+            return { isBeforeCheck };
+        } else {
+            throw new BadRequestException('ma code het han');
+        }
     }
 }
