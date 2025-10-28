@@ -12,6 +12,7 @@ import { hashPasswordhelper } from '../../helper/util';
 import { CodeAuthDto, CreateAuthDto } from 'src/auth/dto/create-auth.dto';
 import dayjs from 'dayjs';
 import { MailerService } from '@nestjs-modules/mailer';
+import e from 'express';
 
 @Injectable()
 export class UserService {
@@ -107,6 +108,7 @@ export class UserService {
         if (existingUser) {
             throw new BadRequestException({ message: 'Email already exist' });
         }
+        const codeexp = dayjs().add(1, 'day');
         const activecodeId = uuidv4();
         const newUser = this.userRepository.create({
             name,
@@ -115,7 +117,7 @@ export class UserService {
             isActive: false,
             codeId: activecodeId,
             // codeExpired: dayjs().add(30, 'minute'),
-            codeExpired: dayjs().add(dayjs.duration({ days: 1 })),
+            codeExpired: codeexp,
         });
         await this.userRepository.save(newUser);
         //send email
@@ -151,5 +153,38 @@ export class UserService {
         } else {
             throw new BadRequestException('ma code het han');
         }
+    }
+
+    async retryActive(email: string) {
+        //check user
+        const user = await this.userRepository.findOne({
+            where: { email: email },
+        });
+        if (!user) {
+            throw new BadRequestException('tài khoản không tồn tại');
+        }
+        if (user.isActive) {
+            throw new BadRequestException('tài khoản đã kích hoạt');
+        }
+        //send email
+        const activecodeId = uuidv4();
+        const codeexp = dayjs().add(1, 'day');
+
+        // update user
+        await this.userRepository.update(user.id, {
+            codeId: activecodeId,
+            codeExpired: codeexp,
+        });
+        this.mailerService.sendMail({
+            to: user.email, // list of receivers
+            subject: 'Resend code', // Subject line
+            template: 'register',
+            context: {
+                // ✏️ filling curly brackets with content
+                name: user.name,
+                activationCode: activecodeId,
+            },
+        });
+        return { id: user.id };
     }
 }
