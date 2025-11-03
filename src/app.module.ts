@@ -11,9 +11,12 @@ import { JwtAuthGuard } from './auth/passport/jwt-auth.guard';
 import { MailerModule } from '@nestjs-modules/mailer';
 import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handlebars.adapter';
 import { TransformInterceptor } from './core/transform.interceptor';
+import { TmdbModule } from './modules/tmbd/tmdb.module';
+import { TmdbCache } from './modules/tmbd/entities/tmdb-cache.entity';
 
 @Module({
     imports: [
+        TmdbModule,
         UserModule,
         AuthModule,
         ConfigModule.forRoot({ isGlobal: true }),
@@ -26,7 +29,7 @@ import { TransformInterceptor } from './core/transform.interceptor';
                 username: configService.get('DB_USERNAME'),
                 password: configService.get('DB_PASSWORD'),
                 database: configService.get('DB_DATABASE'),
-                entities: [User],
+                entities: [User, TmdbCache],
                 synchronize: true, //use synchronize false for production
             }),
             inject: [ConfigService],
