@@ -10,8 +10,10 @@ import {
 import { MoviesService } from './movies.service';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
+import { Public } from 'src/decorator/customize';
 
 @Controller('movies')
+@Public()
 export class MoviesController {
     constructor(private readonly moviesService: MoviesService) {}
 

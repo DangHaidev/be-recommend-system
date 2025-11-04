@@ -87,4 +87,9 @@ export class TmdbService {
         const url = `${this.baseUrl}/search/movie?api_key=${this.apiKey}&language=vi-VN&query=${encodeURIComponent(query)}`;
         return this.fetchAndCache(type, url, 3); // search TTL ngắn hơn
     }
+    async getMovieDetails(movieId: number) {
+        const url = `${this.baseUrl}/movie/${movieId}?api_key=${this.apiKey}&language=vi-VN`;
+        const { data } = await firstValueFrom(this.httpService.get(url));
+        return data;
+    }
 }

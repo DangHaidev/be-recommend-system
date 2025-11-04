@@ -13,12 +13,15 @@ import { HandlebarsAdapter } from '@nestjs-modules/mailer/dist/adapters/handleba
 import { TransformInterceptor } from './core/transform.interceptor';
 import { TmdbModule } from './modules/tmbd/tmdb.module';
 import { TmdbCache } from './modules/tmbd/entities/tmdb-cache.entity';
+import { Movie } from './modules/movies/entities/movie.entity';
+import { MoviesModule } from './modules/movies/movies.module';
 
 @Module({
     imports: [
         TmdbModule,
         UserModule,
         AuthModule,
+        MoviesModule,
         ConfigModule.forRoot({ isGlobal: true }),
         TypeOrmModule.forRootAsync({
             imports: [ConfigModule],
@@ -29,7 +32,7 @@ import { TmdbCache } from './modules/tmbd/entities/tmdb-cache.entity';
                 username: configService.get('DB_USERNAME'),
                 password: configService.get('DB_PASSWORD'),
                 database: configService.get('DB_DATABASE'),
-                entities: [User, TmdbCache],
+                entities: [User, TmdbCache, Movie],
                 synchronize: true, //use synchronize false for production
             }),
             inject: [ConfigService],

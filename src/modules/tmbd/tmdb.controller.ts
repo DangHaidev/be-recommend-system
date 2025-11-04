@@ -1,8 +1,10 @@
 // tmdb.controller.ts
 import { Controller, Get, Query } from '@nestjs/common';
 import { TmdbService } from './tmdb.services';
+import { Public } from 'src/decorator/customize';
 
 @Controller('tmdb')
+@Public()
 export class TmdbController {
     constructor(private readonly tmdbService: TmdbService) {}
 
