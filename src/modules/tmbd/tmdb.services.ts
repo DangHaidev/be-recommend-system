@@ -6,6 +6,7 @@ import { Repository } from 'typeorm';
 import { ConfigService } from '@nestjs/config';
 import { firstValueFrom } from 'rxjs';
 import { TmdbCache } from './entities/tmdb-cache.entity';
+import { mapTmdbMovieToEntity } from '../movies/utils/movies.mapper';
 
 @Injectable()
 export class TmdbService {
@@ -88,8 +89,17 @@ export class TmdbService {
         return this.fetchAndCache(type, url, 3); // search TTL ngắn hơn
     }
     async getMovieDetails(movieId: number) {
-        const url = `${this.baseUrl}/movie/${movieId}?api_key=${this.apiKey}&language=vi-VN`;
-        const { data } = await firstValueFrom(this.httpService.get(url));
-        return data;
+        const movieUrl = `${this.baseUrl}/movie/${movieId}?api_key=${this.apiKey}&language=vi-VN`;
+        const videoUrl = `${this.baseUrl}/movie/${movieId}/videos?api_key=${this.apiKey}`;
+
+        const [movieRes, videoRes] = await Promise.all([
+            firstValueFrom(this.httpService.get(movieUrl)),
+            firstValueFrom(this.httpService.get(videoUrl)),
+        ]);
+
+        const movieData = movieRes.data;
+        const videoData = videoRes.data.results;
+
+        return mapTmdbMovieToEntity(movieData, videoData);
     }
 }

@@ -38,10 +38,12 @@ export class MoviesService {
         }
 
         // 2. Fetch từ TMDB
-        const tmdbData = await this.tmdbService.getMovieDetails(id);
+        // const tmdbData =
+        //     await this.tmdbService.getMovieDetails(id);
 
         // 3. Map và lưu
-        const newMovie = this.movieRepo.create(mapTmdbMovieToEntity(tmdbData));
+        const newMovie = await this.tmdbService.getMovieDetails(id);
+
         await this.movieRepo.save(newMovie);
 
         return newMovie;

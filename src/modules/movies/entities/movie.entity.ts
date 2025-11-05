@@ -3,7 +3,7 @@ import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
 @Entity('movies')
 export class Movie {
     @PrimaryGeneratedColumn()
-    id: number;
+    id?: number;
 
     @Column({ unique: true })
     tmdbId: number;
@@ -34,4 +34,7 @@ export class Movie {
 
     @Column({ nullable: true })
     language: string;
+
+    @Column({ nullable: true })
+    trailer: string;
 }
