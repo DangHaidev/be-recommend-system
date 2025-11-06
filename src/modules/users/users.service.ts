@@ -9,9 +9,10 @@ import { User } from './entities/user.entity';
 import { Repository } from 'typeorm';
 import { v4 as uuidv4 } from 'uuid';
 import { hashPasswordhelper } from '../../helper/util';
-import { CreateAuthDto } from 'src/auth/dto/create-auth.dto';
+import { CodeAuthDto, CreateAuthDto } from 'src/auth/dto/create-auth.dto';
 import dayjs from 'dayjs';
 import { MailerService } from '@nestjs-modules/mailer';
+import e from 'express';
 
 @Injectable()
 export class UserService {
@@ -107,6 +108,7 @@ export class UserService {
         if (existingUser) {
             throw new BadRequestException({ message: 'Email already exist' });
         }
+        const codeexp = dayjs().add(1, 'day');
         const activecodeId = uuidv4();
         const newUser = this.userRepository.create({
             name,
@@ -114,7 +116,8 @@ export class UserService {
             password: hashPassword,
             isActive: false,
             codeId: activecodeId,
-            codeExpired: dayjs().add(30, 'minutes'),
+            // codeExpired: dayjs().add(30, 'minute'),
+            codeExpired: codeexp,
         });
         await this.userRepository.save(newUser);
         //send email
@@ -132,5 +135,56 @@ export class UserService {
         return {
             id: newUser.id,
         };
+    }
+    async handleActive(data: CodeAuthDto) {
+        const user = await this.userRepository.findOne({
+            where: { id: data.id, codeId: data.code },
+        });
+        if (!user) {
+            throw new BadRequestException('mã code không hợp lệ');
+        }
+
+        // check expire
+        const isBeforeCheck = dayjs().isBefore(user.codeExpired);
+
+        if (isBeforeCheck) {
+            await this.userRepository.update(user.id, { isActive: true });
+            return { isBeforeCheck };
+        } else {
+            throw new BadRequestException('ma code het han');
+        }
+    }
+
+    async retryActive(email: string) {
+        //check user
+        const user = await this.userRepository.findOne({
+            where: { email: email },
+        });
+        if (!user) {
+            throw new BadRequestException('tài khoản không tồn tại');
+        }
+        if (user.isActive) {
+            throw new BadRequestException('tài khoản đã kích hoạt');
+        }
+        //send email
+        const activecodeId = uuidv4();
+        const codeexp = dayjs().add(1, 'day');
+
+        // update user
+        await this.userRepository.update(user.id, {
+            codeId: activecodeId,
+            codeExpired: codeexp,
+        });
+        this.mailerService.sendMail({
+            to: user.email, // list of receivers
+            subject: 'Resend code', // Subject line
+            template: 'register',
+            context: {
+                // ✏️ filling curly brackets with content
+                name: user.name,
+                activationCode: activecodeId,
+            },
+        });
+        return { id: user.id };
     }
 }
