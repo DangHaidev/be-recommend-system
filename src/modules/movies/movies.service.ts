@@ -1,19 +1,37 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, OnModuleInit } from '@nestjs/common';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { Movie } from './entities/movie.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TmdbService } from '../tmbd/tmdb.services';
-import { mapTmdbMovieToEntity } from './utils/movies.mapper';
+import MiniSearch from 'minisearch';
 
 @Injectable()
-export class MoviesService {
+export class MoviesService implements OnModuleInit {
+    private miniSearch: MiniSearch;
     constructor(
         @InjectRepository(Movie)
         private readonly movieRepo: Repository<Movie>,
         private readonly tmdbService: TmdbService,
     ) {}
+    async onModuleInit() {
+        // Khởi tạo MiniSearch
+        this.miniSearch = new MiniSearch({
+            fields: ['title', 'overview', 'genres'],
+            storeFields: ['tmdbId', 'title', 'posterUrl', 'runtime'],
+            searchOptions: {
+                fuzzy: 0.2,
+                prefix: true,
+            },
+        });
+        // Nạp dữ liệu phim từ database
+        const movies = await this.movieRepo.find();
+        this.miniSearch.addAll(movies);
+    }
+    async search(keyword: string) {
+        return this.miniSearch.search(keyword);
+    }
 
     private isFresh(movie: Movie) {
         const ONE_WEEK = 1000 * 60 * 60 * 24 * 7;
