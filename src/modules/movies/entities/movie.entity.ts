@@ -1,4 +1,5 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { User } from 'src/modules/users/entities/user.entity';
+import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
 
 @Entity('movies')
 export class Movie {
@@ -37,4 +38,8 @@ export class Movie {
 
     @Column({ nullable: true })
     trailer: string;
+
+    // Quan hệ nhiều-nhiều với User
+    @ManyToMany(() => User, (user) => user.favoriteMovies)
+    favoritedBy?: User[];
 }

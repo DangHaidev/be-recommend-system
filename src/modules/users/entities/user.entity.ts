@@ -1,4 +1,11 @@
-import { Entity, PrimaryGeneratedColumn, Column } from 'typeorm';
+import { Movie } from 'src/modules/movies/entities/movie.entity';
+import {
+    Entity,
+    PrimaryGeneratedColumn,
+    Column,
+    ManyToMany,
+    JoinTable,
+} from 'typeorm';
 
 @Entity()
 export class User {
@@ -37,4 +44,8 @@ export class User {
 
     @Column({ nullable: true })
     codeExpired: Date;
+
+    @ManyToMany(() => Movie, (movie) => movie.favoritedBy, { cascade: true })
+    @JoinTable()
+    favoriteMovies: Movie[];
 }

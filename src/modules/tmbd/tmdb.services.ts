@@ -1,5 +1,9 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import { Injectable } from '@nestjs/common';
+import {
+    Injectable,
+    InternalServerErrorException,
+    NotFoundException,
+} from '@nestjs/common';
 import { HttpService } from '@nestjs/axios';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -92,14 +96,32 @@ export class TmdbService {
         const movieUrl = `${this.baseUrl}/movie/${movieId}?api_key=${this.apiKey}&language=vi-VN`;
         const videoUrl = `${this.baseUrl}/movie/${movieId}/videos?api_key=${this.apiKey}`;
 
-        const [movieRes, videoRes] = await Promise.all([
-            firstValueFrom(this.httpService.get(movieUrl)),
-            firstValueFrom(this.httpService.get(videoUrl)),
-        ]);
+        try {
+            const [movieRes, videoRes] = await Promise.all([
+                firstValueFrom(this.httpService.get(movieUrl)),
+                firstValueFrom(this.httpService.get(videoUrl)),
+            ]);
 
-        const movieData = movieRes.data;
-        const videoData = videoRes.data.results;
+            const movieData = movieRes.data;
+            const videoData = videoRes.data.results;
 
-        return mapTmdbMovieToEntity(movieData, videoData);
+            return mapTmdbMovieToEntity(movieData, videoData);
+        } catch (error) {
+            // Axios lỗi sẽ có cấu trúc như sau:
+            // error.response.status  => mã lỗi HTTP (404, 500, v.v.)
+            // error.response.data     => dữ liệu lỗi từ TMDB
+
+            if (error.response?.status === 404) {
+                // Movie không tồn tại trong TMDB
+                throw new NotFoundException(
+                    'Movie with the given ID does not exist',
+                );
+            }
+
+            // Các lỗi khác (timeout, 500, network, v.v.)
+            throw new InternalServerErrorException(
+                'Failed to fetch movie data from TMDB',
+            );
+        }
     }
 }

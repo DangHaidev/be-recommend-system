@@ -1,4 +1,8 @@
-import { Injectable, OnModuleInit } from '@nestjs/common';
+import {
+    Injectable,
+    InternalServerErrorException,
+    OnModuleInit,
+} from '@nestjs/common';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { Movie } from './entities/movie.entity';
@@ -61,6 +65,9 @@ export class MoviesService implements OnModuleInit {
 
         // 3. Map và lưu
         const newMovie = await this.tmdbService.getMovieDetails(id);
+
+        if (!newMovie)
+            throw new InternalServerErrorException('Movie not found in TMDB');
 
         await this.movieRepo.save(newMovie);
 

@@ -15,6 +15,7 @@ import { TmdbModule } from './modules/tmbd/tmdb.module';
 import { TmdbCache } from './modules/tmbd/entities/tmdb-cache.entity';
 import { Movie } from './modules/movies/entities/movie.entity';
 import { MoviesModule } from './modules/movies/movies.module';
+import { UserInteractModule } from './modules/user-interact/user-interact.module';
 
 @Module({
     imports: [
@@ -22,6 +23,7 @@ import { MoviesModule } from './modules/movies/movies.module';
         UserModule,
         AuthModule,
         MoviesModule,
+        UserInteractModule,
         ConfigModule.forRoot({ isGlobal: true }),
         TypeOrmModule.forRootAsync({
             imports: [ConfigModule],
