@@ -1,5 +1,12 @@
+import { Review } from 'src/modules/review/entity/review.entity';
 import { User } from 'src/modules/users/entities/user.entity';
-import { Column, Entity, ManyToMany, PrimaryGeneratedColumn } from 'typeorm';
+import {
+    Column,
+    Entity,
+    ManyToMany,
+    OneToMany,
+    PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity('movies')
 export class Movie {
@@ -42,4 +49,6 @@ export class Movie {
     // Quan hệ nhiều-nhiều với User
     @ManyToMany(() => User, (user) => user.favoriteMovies)
     favoritedBy?: User[];
+    @OneToMany(() => Review, (review) => review.movie)
+    reviews?: Review[];
 }

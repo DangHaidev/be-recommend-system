@@ -1,10 +1,12 @@
 import { Movie } from 'src/modules/movies/entities/movie.entity';
+import { Review } from 'src/modules/review/entity/review.entity';
 import {
     Entity,
     PrimaryGeneratedColumn,
     Column,
     ManyToMany,
     JoinTable,
+    OneToMany,
 } from 'typeorm';
 
 @Entity()
@@ -48,4 +50,7 @@ export class User {
     @ManyToMany(() => Movie, (movie) => movie.favoritedBy, { cascade: true })
     @JoinTable()
     favoriteMovies: Movie[];
+
+    @OneToMany(() => Review, (review) => review.user)
+    reviews: Review[];
 }
