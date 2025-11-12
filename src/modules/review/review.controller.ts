@@ -20,4 +20,23 @@ export class ReviewController {
     getByUser(@Param('id') id: string) {
         return this.reviewsService.findByUser(+id);
     }
+
+    @Post('rating/:movieId')
+    rateMovie(
+        @Param('movieId') movieId: number,
+        @Body('userId') userId: number,
+        @Body('score') score: number,
+    ) {
+        return this.reviewsService.rateMovie(userId, movieId, score);
+    }
+
+    @Get('rating/:movieId/average')
+    getAverageRating(@Param('movieId') movieId: number) {
+        return this.reviewsService.getAverageRating(movieId);
+    }
+
+    @Get('rating/user/:userId')
+    getUserRatings(@Param('userId') userId: number) {
+        return this.reviewsService.getUserRatings(userId);
+    }
 }

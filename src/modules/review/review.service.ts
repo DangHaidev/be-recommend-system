@@ -1,3 +1,5 @@
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
+/* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
@@ -5,6 +7,7 @@ import { User } from '../users/entities/user.entity';
 import { Movie } from '../movies/entities/movie.entity';
 import { Review } from './entity/review.entity';
 import { CreateReviewDto } from './dto/create-review.dto';
+import { MovieRating } from './entity/movie-rating.entity';
 @Injectable()
 export class ReviewService {
     constructor(
@@ -14,6 +17,8 @@ export class ReviewService {
         private readonly userRepo: Repository<User>,
         @InjectRepository(Movie)
         private readonly movieRepo: Repository<Movie>,
+        @InjectRepository(MovieRating)
+        private readonly ratingRepo: Repository<MovieRating>,
     ) {}
 
     async create(createReviewDto: CreateReviewDto) {
@@ -109,5 +114,54 @@ export class ReviewService {
                 rating: r.m_rating,
             },
         }));
+    }
+
+    // User chấm điểm (nếu đã có => update)
+    async rateMovie(userId: number, movieId: number, score: number) {
+        if (score < 0 || score > 10) {
+            throw new Error('Điểm rating phải nằm trong khoảng 0-10');
+        }
+
+        const movie = await this.movieRepo.findOne({
+            where: { tmdbId: movieId },
+        });
+        if (!movie) throw new Error('Không tìm thấy phim');
+
+        const existing = await this.ratingRepo.findOne({
+            where: { user: { id: userId }, movie: { id: movie.id } },
+            relations: ['user', 'movie'],
+        });
+
+        if (existing) {
+            existing.rating = score;
+            return this.ratingRepo.save(existing);
+        } else {
+            const newRating = this.ratingRepo.create({
+                rating: score,
+                user: { id: userId } as User,
+                movie,
+            });
+            return this.ratingRepo.save(newRating);
+        }
+    }
+
+    // Lấy trung bình điểm của 1 phim
+    async getAverageRating(tmdbId: number) {
+        const result = await this.ratingRepo
+            .createQueryBuilder('rating')
+            .leftJoin('rating.movie', 'movie')
+            .select('AVG(rating.rating)', 'avg')
+            .where('movie.tmdbId = :tmdbId', { tmdbId })
+            .getRawOne();
+
+        return Number(result.avg) || 0;
+    }
+
+    // Lấy danh sách phim user đã rating
+    async getUserRatings(userId: number) {
+        return this.ratingRepo.find({
+            where: { user: { id: userId } },
+            relations: ['movie'],
+        });
     }
 }

@@ -1,4 +1,5 @@
 import { Movie } from 'src/modules/movies/entities/movie.entity';
+import { MovieRating } from 'src/modules/review/entity/movie-rating.entity';
 import { Review } from 'src/modules/review/entity/review.entity';
 import {
     Entity,
@@ -52,5 +53,8 @@ export class User {
     favoriteMovies: Movie[];
 
     @OneToMany(() => Review, (review) => review.user)
-    reviews: Review[];
+    reviews?: Review[];
+
+    @OneToMany(() => MovieRating, (rating) => rating.user)
+    ratings?: MovieRating[];
 }
