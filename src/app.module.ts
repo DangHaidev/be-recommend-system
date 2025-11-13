@@ -15,6 +15,10 @@ import { TmdbModule } from './modules/tmbd/tmdb.module';
 import { TmdbCache } from './modules/tmbd/entities/tmdb-cache.entity';
 import { Movie } from './modules/movies/entities/movie.entity';
 import { MoviesModule } from './modules/movies/movies.module';
+import { UserInteractModule } from './modules/user-interact/user-interact.module';
+import { ReviewModule } from './modules/review/review.module';
+import { Review } from './modules/review/entity/review.entity';
+import { MovieRating } from './modules/review/entity/movie-rating.entity';
 
 @Module({
     imports: [
@@ -22,6 +26,8 @@ import { MoviesModule } from './modules/movies/movies.module';
         UserModule,
         AuthModule,
         MoviesModule,
+        UserInteractModule,
+        ReviewModule,
         ConfigModule.forRoot({ isGlobal: true }),
         TypeOrmModule.forRootAsync({
             imports: [ConfigModule],
@@ -32,7 +38,7 @@ import { MoviesModule } from './modules/movies/movies.module';
                 username: configService.get('DB_USERNAME'),
                 password: configService.get('DB_PASSWORD'),
                 database: configService.get('DB_DATABASE'),
-                entities: [User, TmdbCache, Movie],
+                entities: [User, TmdbCache, Movie, Review, MovieRating],
                 synchronize: true, //use synchronize false for production
             }),
             inject: [ConfigService],

@@ -1,4 +1,13 @@
-import { Column, Entity, PrimaryGeneratedColumn } from 'typeorm';
+import { MovieRating } from 'src/modules/review/entity/movie-rating.entity';
+import { Review } from 'src/modules/review/entity/review.entity';
+import { User } from 'src/modules/users/entities/user.entity';
+import {
+    Column,
+    Entity,
+    ManyToMany,
+    OneToMany,
+    PrimaryGeneratedColumn,
+} from 'typeorm';
 
 @Entity('movies')
 export class Movie {
@@ -37,4 +46,13 @@ export class Movie {
 
     @Column({ nullable: true })
     trailer: string;
+
+    // Quan hệ nhiều-nhiều với User
+    @ManyToMany(() => User, (user) => user.favoriteMovies)
+    favoritedBy?: User[];
+    @OneToMany(() => Review, (review) => review.movie)
+    reviews?: Review[];
+
+    @OneToMany(() => MovieRating, (rating) => rating.movie)
+    ratings?: MovieRating[];
 }
