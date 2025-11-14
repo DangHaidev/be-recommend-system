@@ -7,7 +7,9 @@ import {
     ManyToOne,
     CreateDateColumn,
     UpdateDateColumn,
+    OneToMany,
 } from 'typeorm';
+import { ReviewReaction } from './review-reaction.entity';
 
 @Entity('reviews')
 export class Review {
@@ -25,6 +27,9 @@ export class Review {
 
     @ManyToOne(() => Movie, (movie) => movie.reviews, { onDelete: 'CASCADE' })
     movie: Movie;
+
+    @OneToMany(() => ReviewReaction, (reaction) => reaction.review)
+    reactions: ReviewReaction[];
 
     @CreateDateColumn()
     createdAt: Date;

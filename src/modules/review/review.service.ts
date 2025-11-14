@@ -8,6 +8,8 @@ import { Movie } from '../movies/entities/movie.entity';
 import { Review } from './entity/review.entity';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { MovieRating } from './entity/movie-rating.entity';
+import { CreateReviewReactionDto } from './dto/create-reaction.dto';
+import { ReviewReaction } from './entity/review-reaction.entity';
 @Injectable()
 export class ReviewService {
     constructor(
@@ -19,6 +21,8 @@ export class ReviewService {
         private readonly movieRepo: Repository<Movie>,
         @InjectRepository(MovieRating)
         private readonly ratingRepo: Repository<MovieRating>,
+        @InjectRepository(ReviewReaction)
+        private readonly reactionRepo: Repository<ReviewReaction>,
     ) {}
 
     async create(createReviewDto: CreateReviewDto) {
@@ -163,5 +167,47 @@ export class ReviewService {
             where: { user: { id: userId } },
             relations: ['movie'],
         });
+    }
+
+    async reactToReview(userId: number, dto: CreateReviewReactionDto) {
+        const { reviewId, type } = dto;
+
+        // Kiểm tra review tồn tại
+        const review = await this.reviewRepo.findOne({
+            where: { id: reviewId },
+        });
+        if (!review) {
+            throw new NotFoundException('Review not found');
+        }
+
+        // Kiểm tra user đã react trước đó chưa
+        const existing = await this.reactionRepo.findOne({
+            where: { user: { id: userId }, review: { id: reviewId } },
+            relations: ['user', 'review'],
+        });
+
+        // Nếu chưa từng react → tạo mới
+        if (!existing) {
+            const newReaction = this.reactionRepo.create({
+                type,
+                user: { id: userId },
+                review: { id: reviewId },
+            });
+
+            await this.reactionRepo.save(newReaction);
+            return { message: `You ${type}d this review.` };
+        }
+
+        // Nếu nhấn cùng type → bỏ like/dislike
+        if (existing.type === type) {
+            await this.reactionRepo.remove(existing);
+            return { message: `${type} removed.` };
+        }
+
+        // Nếu đổi từ like → dislike hoặc ngược lại
+        existing.type = type;
+        await this.reactionRepo.save(existing);
+
+        return { message: `Changed to ${type}.` };
     }
 }

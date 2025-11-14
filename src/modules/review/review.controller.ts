@@ -1,6 +1,7 @@
-import { Body, Controller, Get, Param, Post } from '@nestjs/common';
+import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { ReviewService } from './review.service';
 import { CreateReviewDto } from './dto/create-review.dto';
+import { CreateReviewReactionDto } from './dto/create-reaction.dto';
 
 @Controller('review')
 export class ReviewController {
@@ -38,5 +39,10 @@ export class ReviewController {
     @Get('rating/user/:userId')
     getUserRatings(@Param('userId') userId: number) {
         return this.reviewsService.getUserRatings(userId);
+    }
+
+    @Post('react')
+    reactToReview(@Req() req, @Body() dto: CreateReviewReactionDto) {
+        return this.reviewsService.reactToReview(req.user.id, dto);
     }
 }
