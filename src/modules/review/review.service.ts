@@ -10,6 +10,7 @@ import { CreateReviewDto } from './dto/create-review.dto';
 import { MovieRating } from './entity/movie-rating.entity';
 import { CreateReviewReactionDto } from './dto/create-reaction.dto';
 import { ReviewReaction } from './entity/review-reaction.entity';
+import { title } from 'process';
 @Injectable()
 export class ReviewService {
     constructor(
@@ -26,7 +27,7 @@ export class ReviewService {
     ) {}
 
     async create(createReviewDto: CreateReviewDto) {
-        const { content, rating, movieId, userId } = createReviewDto;
+        const { content, rating, movieId, userId, title } = createReviewDto;
 
         const user = await this.userRepo.findOneBy({ id: userId });
         const movie = await this.movieRepo.findOneBy({ tmdbId: movieId });
@@ -36,6 +37,7 @@ export class ReviewService {
 
         const review = this.reviewRepo.create({
             content,
+            title,
             rating,
             user,
             movie,
@@ -60,6 +62,7 @@ export class ReviewService {
                 'review.content',
                 'review.rating',
                 'review.createdAt',
+                'review.title',
                 'u.id',
                 'u.name',
                 'u.image',
@@ -73,6 +76,7 @@ export class ReviewService {
             content: r.review_content,
             rating: r.review_rating,
             createdAt: r.review_createdAt,
+            title: r.review_title,
             user: {
                 id: r.u_id,
                 username: r.u_name,
@@ -97,6 +101,7 @@ export class ReviewService {
                 'review.content',
                 'review.rating',
                 'review.createdAt',
+                'review.title',
                 'm.tmdbId',
                 'm.title',
                 'm.releaseDate',
@@ -111,6 +116,7 @@ export class ReviewService {
             content: r.review_content,
             rating: r.review_rating,
             createdAt: r.review_createdAt,
+            title: r.review_title,
             movie: {
                 tmdbId: r.m_tmdbId,
                 title: r.m_title,

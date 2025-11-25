@@ -12,6 +12,10 @@ export class CreateReviewDto {
     @IsNotEmpty()
     content: string;
 
+    @IsString()
+    @IsNotEmpty()
+    title: string;
+
     @IsOptional()
     @IsInt()
     @Min(1)

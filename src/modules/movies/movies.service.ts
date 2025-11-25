@@ -34,7 +34,7 @@ export class MoviesService implements OnModuleInit {
         this.miniSearch.addAll(movies);
     }
     async search(keyword: string) {
-        return this.miniSearch.search(keyword);
+        return this.miniSearch.search(keyword).slice(0, 10);
     }
 
     private isFresh(movie: Movie) {
