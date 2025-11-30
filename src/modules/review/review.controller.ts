@@ -2,6 +2,7 @@ import { Body, Controller, Get, Param, Post, Req } from '@nestjs/common';
 import { ReviewService } from './review.service';
 import { CreateReviewDto } from './dto/create-review.dto';
 import { CreateReviewReactionDto } from './dto/create-reaction.dto';
+import { Public } from 'src/decorator/customize';
 
 @Controller('review')
 export class ReviewController {
@@ -13,6 +14,7 @@ export class ReviewController {
     }
 
     @Get('movie/:id')
+    @Public()
     getByMovie(@Param('id') id: string) {
         return this.reviewsService.findByMovie(+id);
     }

@@ -10,7 +10,7 @@ import { CreateReviewDto } from './dto/create-review.dto';
 import { MovieRating } from './entity/movie-rating.entity';
 import { CreateReviewReactionDto } from './dto/create-reaction.dto';
 import { ReviewReaction } from './entity/review-reaction.entity';
-import { title } from 'process';
+import dayjs from 'dayjs';
 @Injectable()
 export class ReviewService {
     constructor(
@@ -28,7 +28,6 @@ export class ReviewService {
 
     async create(createReviewDto: CreateReviewDto) {
         const { content, rating, movieId, userId, title } = createReviewDto;
-
         const user = await this.userRepo.findOneBy({ id: userId });
         const movie = await this.movieRepo.findOneBy({ tmdbId: movieId });
 
@@ -75,7 +74,7 @@ export class ReviewService {
             id: r.review_id,
             content: r.review_content,
             rating: r.review_rating,
-            createdAt: r.review_createdAt,
+            createdAt: dayjs(r.review_createdAt).format('DD.MM.YYYY, HH:mm'),
             title: r.review_title,
             user: {
                 id: r.u_id,
