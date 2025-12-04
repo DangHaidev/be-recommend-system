@@ -19,6 +19,9 @@ export class Review {
     @Column({ type: 'text' })
     content: string;
 
+    @Column({ type: 'text' })
+    title: string;
+
     @Column({ type: 'int', nullable: true })
     rating: number; // 1–10 chẳng hạn
 
