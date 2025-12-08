@@ -34,6 +34,9 @@ export class User {
     @Column({ nullable: true })
     image: string;
 
+    @Column('text', { array: true, nullable: true })
+    genres: string[];
+
     @Column({ default: 'USER' })
     role: string;
 

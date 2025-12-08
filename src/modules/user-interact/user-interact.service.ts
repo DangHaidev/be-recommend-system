@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+    ConflictException,
+    Injectable,
+    NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
@@ -27,10 +31,11 @@ export class UserInteractService {
 
         // Check xem phim đã trong danh sách chưa
         const already = user.favoriteMovies.find((m) => m.id === movie.id);
-        if (!already) {
-            user.favoriteMovies.push(movie);
-            await this.userRepo.save(user);
+        if (already) {
+            throw new ConflictException('Da co trong danh sach yeu thich');
         }
+        user.favoriteMovies.push(movie);
+        await this.userRepo.save(user);
 
         return user.favoriteMovies;
     }

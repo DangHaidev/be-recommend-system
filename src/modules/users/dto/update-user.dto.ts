@@ -28,4 +28,8 @@ export class UpdateUserDto {
     @IsOptional()
     @IsBoolean()
     isActive?: boolean;
+
+    @IsOptional()
+    @IsString({ each: true })
+    genres?: string[];
 }
