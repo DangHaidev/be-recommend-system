@@ -17,4 +17,20 @@ export class UserInteractController {
     getFavorites(@Param('userId') userId: number) {
         return this.userInteractService.getFavorites(userId);
     }
+
+    @Post(':userId/:movieId/remove')
+    removeFromFavorites(
+        @Param('userId') userId: number,
+        @Param('movieId') movieId: number,
+    ) {
+        return this.userInteractService.removeFromFavorites(userId, movieId);
+    }
+
+    @Post(':userId/:movieId/favorite')
+    isFavorite(
+        @Param('userId') userId: number,
+        @Param('movieId') movieId: number,
+    ) {
+        return this.userInteractService.isFavorite(userId, movieId);
+    }
 }

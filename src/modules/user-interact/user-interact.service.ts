@@ -48,4 +48,40 @@ export class UserInteractService {
         if (!user) throw new NotFoundException('User not found');
         return user.favoriteMovies;
     }
+
+    async removeFromFavorites(userId: number, movieId: number) {
+        const user = await this.userRepo.findOne({
+            where: { id: userId },
+            relations: ['favoriteMovies'],
+        });
+        if (!user) throw new NotFoundException('User not found');
+
+        const movie = await this.movieRepo.findOne({
+            where: { tmdbId: movieId },
+        });
+        if (!movie) throw new NotFoundException('Movie not found');
+
+        user.favoriteMovies = user.favoriteMovies.filter(
+            (m) => m.id !== movie.id,
+        );
+        await this.userRepo.save(user);
+
+        return user.favoriteMovies;
+    }
+    // check movie is favorite of user or not
+    async isFavorite(userId: number, movieId: number) {
+        const user = await this.userRepo.findOne({
+            where: { id: userId },
+            relations: ['favoriteMovies'],
+        });
+
+        if (!user) throw new NotFoundException('User not found');
+
+        const movie = await this.movieRepo.findOne({
+            where: { tmdbId: movieId },
+        });
+        if (!movie) throw new NotFoundException('Movie not found');
+
+        return user.favoriteMovies.some((m) => m.id === movie.id);
+    }
 }
