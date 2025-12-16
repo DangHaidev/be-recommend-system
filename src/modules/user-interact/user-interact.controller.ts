@@ -1,5 +1,6 @@
-import { Controller, Get, Post, Body, Param } from '@nestjs/common';
+import { Controller, Get, Post, Body, Param, Query } from '@nestjs/common';
 import { UserInteractService } from './user-interact.service';
+import { Public } from 'src/decorator/customize';
 
 @Controller('user-interact')
 export class UserInteractController {
@@ -32,5 +33,16 @@ export class UserInteractController {
         @Param('movieId') movieId: number,
     ) {
         return this.userInteractService.isFavorite(userId, movieId);
+    }
+    @Public()
+    @Get('recommendation/:movieId')
+    getRecommendation(
+        @Param('movieId') movieId: number,
+        @Query('top_n') topN: number,
+    ) {
+        return this.userInteractService.getContentBasedRecommendations(
+            movieId,
+            topN,
+        );
     }
 }
