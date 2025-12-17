@@ -1,18 +1,20 @@
 import {
+    BadGatewayException,
     ConflictException,
     HttpException,
     HttpStatus,
     Injectable,
     NotFoundException,
+    ServiceUnavailableException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import { User } from '../users/entities/user.entity';
 import { Movie } from '../movies/entities/movie.entity';
 import { HttpService } from '@nestjs/axios';
-import { lastValueFrom } from 'rxjs';
+import { firstValueFrom, lastValueFrom } from 'rxjs';
 import { Public } from 'src/decorator/customize';
-import axios from 'axios';
+import axios, { AxiosError } from 'axios';
 import { ConfigService } from '@nestjs/config';
 import { MoviesService } from '../movies/movies.service';
 
@@ -102,8 +104,6 @@ export class UserInteractService {
     }
 
     async getContentBasedRecommendations(tmdbId: number, topN: number) {
-        // const url = `http://localhost:8000/recommend/contentbased/${tmdbId}?top_n=${topN}`;
-
         try {
             const res = await axios.get(
                 `${this.fastApiBaseUrl}/recommend/contentbased/${tmdbId}?top_n=${topN}`,
@@ -135,10 +135,101 @@ export class UserInteractService {
             // Lọc bỏ null
             return movies.filter((m) => m !== null);
         } catch (error) {
-            throw new HttpException(
-                'Failed to fetch recommendations',
-                HttpStatus.BAD_GATEWAY,
-            );
+            // 🔴 Axios error từ FastAPI
+            if (axios.isAxiosError(error)) {
+                const status = error.response?.status;
+
+                // FastAPI trả 404
+                if (status === 404) {
+                    try {
+                        const url = `${this.tmdbBaseUrl}/${tmdbId}/recommendations?api_key=${this.apiKey}&language=vi-VN&page=1`;
+                        const { data } = await firstValueFrom(
+                            this.httpService.get(url),
+                        );
+                        // return data;
+
+                        // Bước 2: Gọi TMDb API cho từng phim
+                        const movies = await Promise.all(
+                            data.results.map(async (rec) => {
+                                try {
+                                    const movie =
+                                        await this.movieService.findOne(rec.id);
+                                    return {
+                                        ...movie,
+                                    };
+                                } catch (err) {
+                                    // nếu không tìm thấy phim hoặc lỗi, bỏ qua
+                                    return null;
+                                }
+                            }),
+                        );
+                        return movies;
+
+                        // const response = await firstValueFrom(
+                        //     this.httpService.get(url, {
+                        //         params: { page: 1 },
+                        //         headers: {
+                        //             accept: 'application/json',
+                        //             Authorization: `Bearer ${process.env.TMDB_API_KEY}`,
+                        //         },
+                        //     }),
+                        // );
+
+                        // return response.data;
+                    } catch (error) {
+                        const err = error as AxiosError;
+
+                        // TMDB trả về lỗi HTTP
+                        if (err.response) {
+                            const status = err.response.status;
+
+                            if (status === 404) {
+                                throw new NotFoundException(
+                                    `Movie ${tmdbId} not found on TMDB`,
+                                );
+                            }
+
+                            throw new BadGatewayException(
+                                'TMDB recommendation API failed',
+                            );
+                        }
+
+                        // Không kết nối được TMDB
+                        throw new ServiceUnavailableException(
+                            'TMDB service unavailable',
+                        );
+                    }
+                }
+
+                // Validation / bad request từ FastAPI
+                if (status === 400 || status === 422) {
+                    throw new HttpException(
+                        error.response?.data?.detail ??
+                            'Invalid recommendation request',
+                        status,
+                    );
+                }
+
+                // FastAPI chạy nhưng lỗi nội bộ
+                if (status && status >= 500) {
+                    throw new BadGatewayException(
+                        'Recommendation service failed',
+                    );
+                }
+
+                // Không kết nối được FastAPI
+                if (
+                    error.code === 'ECONNREFUSED' ||
+                    error.code === 'ETIMEDOUT'
+                ) {
+                    throw new ServiceUnavailableException(
+                        'Recommendation service unavailable',
+                    );
+                }
+            }
+
+            // 🔴 Lỗi khác (logic nội bộ NestJS)
+            throw new BadGatewayException('Failed to fetch recommendations');
         }
     }
 
