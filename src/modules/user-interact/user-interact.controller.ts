@@ -45,4 +45,20 @@ export class UserInteractController {
             topN,
         );
     }
+
+    @Get('recommendation/userproflie/:userId')
+    @Public()
+    recommend(
+        @Param('userId') userId: number,
+        @Query('page') page = 1,
+        @Query('page_size') pageSize = 10,
+        @Query('genre') genre?: string,
+    ) {
+        return this.userInteractService.getProfileRecommendations(
+            userId,
+            page,
+            pageSize,
+            genre,
+        );
+    }
 }

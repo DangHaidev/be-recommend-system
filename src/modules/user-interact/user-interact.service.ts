@@ -18,8 +18,7 @@ import { MoviesService } from '../movies/movies.service';
 
 @Injectable()
 export class UserInteractService {
-    private readonly fastApiBaseUrl =
-        'http://localhost:8000/recommend/contentbased';
+    private readonly fastApiBaseUrl = 'http://localhost:8000';
     private readonly tmdbBaseUrl = 'https://api.themoviedb.org/3/movie';
     constructor(
         private readonly httpService: HttpService,
@@ -107,7 +106,7 @@ export class UserInteractService {
 
         try {
             const res = await axios.get(
-                `${this.fastApiBaseUrl}/${tmdbId}?top_n=${topN}`,
+                `${this.fastApiBaseUrl}/recommend/contentbased/${tmdbId}?top_n=${topN}`,
             );
             const recommendations = res.data?.recommendations;
 
@@ -141,5 +140,63 @@ export class UserInteractService {
                 HttpStatus.BAD_GATEWAY,
             );
         }
+    }
+
+    async getProfileRecommendations(
+        userId: number,
+        page = 1,
+        pageSize = 10,
+        genre?: string,
+    ) {
+        try {
+            const res = await axios.get(
+                `${this.fastApiBaseUrl}/recommend/userprofile/${userId}?page=${page}&page_size=${pageSize}`,
+            );
+            // return res.data?.recommendations;
+
+            const recommendations = res.data?.recommendations;
+
+            if (!recommendations || recommendations.length === 0) {
+                return [];
+            }
+
+            // Bước 2: Gọi TMDb API cho từng phim
+            const movies = await Promise.all(
+                recommendations.map(async (rec) => {
+                    try {
+                        const movie = await this.movieService.findOne(
+                            rec.tmdbId,
+                        );
+                        return {
+                            ...movie,
+                            sim: rec.sim,
+                            localTitle: rec.Title,
+                        };
+                    } catch (err) {
+                        // nếu không tìm thấy phim hoặc lỗi, bỏ qua
+                        return null;
+                    }
+                }),
+            );
+            // Lọc null trước
+            const filteredMovies = movies.filter((m) => m !== null);
+
+            // Lọc theo genre nếu có
+            const data = genre
+                ? filteredMovies.filter((item) => item.genres.includes(genre))
+                : filteredMovies;
+
+            return data;
+        } catch (error) {
+            throw new HttpException(
+                'Failed to fetch recommendations',
+                HttpStatus.BAD_GATEWAY,
+            );
+        }
+        // return this.httpService
+        //     .get(`${FASTAPI_URL}/recommend/userprofile/${userId}`, {
+        //         params: { page, page_size: pageSize },
+        //     })
+        //     .toPromise();
     }
 }
