@@ -3,4 +3,5 @@ export class CreateEventDto {
     userId?: number;
     movieId?: number;
     metadata?: any;
+    processed?: boolean;
 }

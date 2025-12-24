@@ -11,6 +11,9 @@ export class Event {
     @Column({ nullable: true })
     movieId: number;
 
+    @Column({ nullable: true, default: false })
+    processed: boolean;
+
     @Column()
     eventName: string;
 
