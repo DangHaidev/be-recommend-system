@@ -6,6 +6,8 @@ import { MoviesModule } from '../movies/movies.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { User } from '../users/entities/user.entity';
 import { Movie } from '../movies/entities/movie.entity';
+import { HttpModule } from '@nestjs/axios';
+import { ConfigModule } from '@nestjs/config';
 
 @Module({
     controllers: [UserInteractController],
@@ -14,6 +16,8 @@ import { Movie } from '../movies/entities/movie.entity';
         TypeOrmModule.forFeature([User, Movie]),
         UserModule,
         MoviesModule,
+        HttpModule,
+        ConfigModule,
     ],
     exports: [UserInteractService],
 })

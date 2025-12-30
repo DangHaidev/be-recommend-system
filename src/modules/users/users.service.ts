@@ -1,6 +1,7 @@
 import {
     BadRequestException,
     Injectable,
+    InternalServerErrorException,
     NotFoundException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -13,6 +14,7 @@ import { CodeAuthDto, CreateAuthDto } from 'src/auth/dto/create-auth.dto';
 import dayjs from 'dayjs';
 import { MailerService } from '@nestjs-modules/mailer';
 import e from 'express';
+import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
 export class UserService {
@@ -77,14 +79,28 @@ export class UserService {
     }
 
     //update user
-    async update(id: number, updateData: Partial<User>): Promise<User> {
+    async update(id: number, updateUserDto: UpdateUserDto): Promise<User> {
         const user = await this.userRepository.findOneBy({ id });
+
         if (!user) {
             throw new NotFoundException(`User with ID ${id} not found`);
         }
 
-        Object.assign(user, updateData); // merge data
-        return this.userRepository.save(user);
+        const { name, image, genres } = updateUserDto;
+
+        if (name !== undefined) {
+            user.name = name;
+        }
+
+        // chỉ update image khi FE gửi lên
+        if (image !== undefined) {
+            user.image = image;
+        }
+        // 4. Update genres (mảng)
+        if (genres !== undefined && genres.length > 0) {
+            user.genres = genres;
+        }
+        return await this.userRepository.save(user);
     }
 
     //delete user

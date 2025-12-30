@@ -20,6 +20,8 @@ import { ReviewModule } from './modules/review/review.module';
 import { Review } from './modules/review/entity/review.entity';
 import { MovieRating } from './modules/review/entity/movie-rating.entity';
 import { ReviewReaction } from './modules/review/entity/review-reaction.entity';
+import { Event } from './modules/event/entities/event.entity';
+import { EventModule } from './modules/event/event.module';
 
 @Module({
     imports: [
@@ -29,6 +31,7 @@ import { ReviewReaction } from './modules/review/entity/review-reaction.entity';
         MoviesModule,
         UserInteractModule,
         ReviewModule,
+        EventModule,
         ConfigModule.forRoot({ isGlobal: true }),
         TypeOrmModule.forRootAsync({
             imports: [ConfigModule],
@@ -46,6 +49,7 @@ import { ReviewReaction } from './modules/review/entity/review-reaction.entity';
                     Review,
                     MovieRating,
                     ReviewReaction,
+                    Event,
                 ],
                 synchronize: true, //use synchronize false for production
             }),

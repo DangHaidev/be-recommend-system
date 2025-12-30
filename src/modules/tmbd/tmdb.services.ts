@@ -1,5 +1,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
 import {
+    HttpException,
+    HttpStatus,
     Injectable,
     InternalServerErrorException,
     NotFoundException,
@@ -62,6 +64,17 @@ export class TmdbService {
         await this.setCache(type, data);
         return data;
     }
+    private async fetchFromTMDB(url: string): Promise<any> {
+        try {
+            const { data } = await firstValueFrom(this.httpService.get(url));
+            return data;
+        } catch (error) {
+            throw new HttpException(
+                'TMDB service unavailable',
+                HttpStatus.BAD_GATEWAY,
+            );
+        }
+    }
 
     // -----------------------------
     // Các API cụ thể:
@@ -70,6 +83,25 @@ export class TmdbService {
     async getPopularMovies() {
         const url = `${this.baseUrl}/movie/popular?api_key=${this.apiKey}&language=vi-VN&page=1`;
         return this.fetchAndCache('popular', url, 12);
+    }
+    async getPopularMovies2(current = 1, pageSize = 12) {
+        const url =
+            `${this.baseUrl}/movie/popular` +
+            `?api_key=${this.apiKey}` +
+            `&language=vi-VN` +
+            `&page=${current}`;
+
+        const data = await this.fetchFromTMDB(url);
+
+        return {
+            result: data.results.slice(0, pageSize),
+            meta: {
+                current,
+                pageSize,
+                pages: data.total_pages,
+                total: data.total_results,
+            },
+        };
     }
 
     async getTopRatedMovies() {

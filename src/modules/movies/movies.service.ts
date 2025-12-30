@@ -10,6 +10,7 @@ import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { TmdbService } from '../tmbd/tmdb.services';
 import MiniSearch from 'minisearch';
+import { FindMovieDto } from './dto/findmovie.dto';
 
 @Injectable()
 export class MoviesService implements OnModuleInit {
@@ -47,8 +48,55 @@ export class MoviesService implements OnModuleInit {
         return 'This action adds a new movie';
     }
 
-    findAll() {
-        return `This action returns all movies`;
+    // async findAll(page: number, pageSize: number): Promise<any> {
+    //     const [result, total] = await this.movieRepo.findAndCount({
+    //         skip: (page - 1) * pageSize,
+    //         take: pageSize,
+    //     });
+
+    //     return {
+    //         data: result,
+    //         totalRecords: total,
+    //         totalPages: Math.ceil(total / pageSize),
+    //         currentPage: page,
+    //     };
+    // }
+    async findAll(dto: FindMovieDto): Promise<any> {
+        const { current, pageSize, genre, year, language } = dto;
+
+        const qb = this.movieRepo.createQueryBuilder('movie');
+
+        if (genre) {
+            qb.andWhere(':genre = ANY(movie.genres)', { genre });
+        }
+
+        if (year) {
+            qb.andWhere(
+                'movie.releaseDate >= :start AND movie.releaseDate < :end',
+                {
+                    start: `${year}-01-01`,
+                    end: `${Number(year) + 1}-01-01`,
+                },
+            );
+        }
+
+        if (language) {
+            qb.andWhere('movie.language = :language', { language });
+        }
+
+        qb.skip((current - 1) * pageSize).take(pageSize);
+
+        const [result, total] = await qb.getManyAndCount();
+
+        return {
+            meta: {
+                current,
+                pageSize,
+                pages: Math.ceil(total / pageSize),
+                total,
+            },
+            result,
+        };
     }
 
     async findOne(id: number): Promise<Movie> {

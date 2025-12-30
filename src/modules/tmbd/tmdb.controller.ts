@@ -1,7 +1,8 @@
 // tmdb.controller.ts
-import { Controller, Get, Query } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { TmdbService } from './tmdb.services';
 import { Public } from 'src/decorator/customize';
+import { PaginateDto } from './dto/paginate.dto';
 
 @Controller('tmdb')
 @Public()
@@ -11,6 +12,11 @@ export class TmdbController {
     @Get('popular')
     getPopular() {
         return this.tmdbService.getPopularMovies();
+    }
+    @Post('post-popular')
+    async postPopular(@Body() body: PaginateDto) {
+        const { current, pageSize } = body;
+        return this.tmdbService.getPopularMovies2(current, pageSize);
     }
 
     @Get('top-rated')
