@@ -21,7 +21,7 @@ export class MoviesService implements OnModuleInit {
         private readonly tmdbService: TmdbService,
     ) {}
     async onModuleInit() {
-        // Khởi tạo MiniSearch
+        // init MiniSearch
         this.miniSearch = new MiniSearch({
             fields: ['title', 'overview', 'genres'],
             storeFields: ['tmdbId', 'title', 'posterUrl', 'runtime'],
@@ -30,7 +30,7 @@ export class MoviesService implements OnModuleInit {
                 prefix: true,
             },
         });
-        // Nạp dữ liệu phim từ database
+        // load data from database
         const movies = await this.movieRepo.find();
         this.miniSearch.addAll(movies);
     }
@@ -47,20 +47,6 @@ export class MoviesService implements OnModuleInit {
     create(createMovieDto: CreateMovieDto) {
         return 'This action adds a new movie';
     }
-
-    // async findAll(page: number, pageSize: number): Promise<any> {
-    //     const [result, total] = await this.movieRepo.findAndCount({
-    //         skip: (page - 1) * pageSize,
-    //         take: pageSize,
-    //     });
-
-    //     return {
-    //         data: result,
-    //         totalRecords: total,
-    //         totalPages: Math.ceil(total / pageSize),
-    //         currentPage: page,
-    //     };
-    // }
     async findAll(dto: FindMovieDto): Promise<any> {
         const { current, pageSize, genre, year, language } = dto;
 
@@ -104,14 +90,10 @@ export class MoviesService implements OnModuleInit {
         const movie = await this.movieRepo.findOne({ where: { tmdbId: id } });
 
         if (movie) {
-            return movie; // Dữ liệu cache vẫn mới
+            return movie;
         }
 
-        // 2. Fetch từ TMDB
-        // const tmdbData =
-        //     await this.tmdbService.getMovieDetails(id);
-
-        // 3. Map và lưu
+        // 3. Map and save
         const newMovie = await this.tmdbService.getMovieDetails(id);
 
         if (!newMovie)

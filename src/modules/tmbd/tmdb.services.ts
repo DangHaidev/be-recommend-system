@@ -29,7 +29,7 @@ export class TmdbService {
         return this.configService.get<string>('TMDB_API_KEY');
     }
 
-    /** Lấy cache từ DB (nếu còn hiệu lực) */
+    // get cache
     private async getCache(
         type: string,
         ttlHours: number,
@@ -47,13 +47,10 @@ export class TmdbService {
 
         return null;
     }
-
-    /** Lưu cache mới vào DB */
     private async setCache(type: string, data: any) {
         await this.cacheRepo.save({ type, data });
     }
 
-    /** Hàm tiện ích: gọi TMDB API + cache */
     private async fetchAndCache(type: string, url: string, ttlHours = 12) {
         const cached = await this.getCache(type, ttlHours);
         if (cached) return cached;
@@ -75,11 +72,6 @@ export class TmdbService {
             );
         }
     }
-
-    // -----------------------------
-    // Các API cụ thể:
-    // -----------------------------
-
     async getPopularMovies() {
         const url = `${this.baseUrl}/movie/popular?api_key=${this.apiKey}&language=vi-VN&page=1`;
         return this.fetchAndCache('popular', url, 12);
@@ -139,18 +131,12 @@ export class TmdbService {
 
             return mapTmdbMovieToEntity(movieData, videoData);
         } catch (error) {
-            // Axios lỗi sẽ có cấu trúc như sau:
-            // error.response.status  => mã lỗi HTTP (404, 500, v.v.)
-            // error.response.data     => dữ liệu lỗi từ TMDB
-
             if (error.response?.status === 404) {
-                // Movie không tồn tại trong TMDB
+                // Movie done not exist
                 throw new NotFoundException(
                     'Movie with the given ID does not exist',
                 );
             }
-
-            // Các lỗi khác (timeout, 500, network, v.v.)
             throw new InternalServerErrorException(
                 'Failed to fetch movie data from TMDB',
             );

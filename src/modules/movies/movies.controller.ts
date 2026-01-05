@@ -18,20 +18,6 @@ import { FindMovieDto } from './dto/findmovie.dto';
 @Public()
 export class MoviesController {
     constructor(private readonly moviesService: MoviesService) {}
-
-    // @Post()
-    // create(@Body() createMovieDto: CreateMovieDto) {
-    //     return this.moviesService.create(createMovieDto);
-    // }
-
-    // @Get()
-    // findAll(
-    //     @Query('page') page: number = 1,
-    //     @Query('pageSize') pageSize: number = 12,
-    // ) {
-    //     return this.moviesService.findAll(page, pageSize);
-    // }
-
     @Post()
     findAll(@Body() dto: FindMovieDto) {
         return this.moviesService.findAll(dto);

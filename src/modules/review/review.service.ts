@@ -46,11 +46,6 @@ export class ReviewService {
     }
 
     async findByMovie(movieId: number) {
-        // return this.reviewRepo.find({
-        //     where: { movie: { tmdbId: movieId } },
-        //     relations: ['user'],
-        //     order: { createdAt: 'DESC' },
-        // });
         const reviews = await this.reviewRepo
             .createQueryBuilder('review')
             .leftJoinAndSelect('review.user', 'u')
@@ -69,7 +64,6 @@ export class ReviewService {
             .orderBy('review.createdAt', 'DESC')
             .getRawMany();
 
-        // getRawMany trả về cột dạng alias: 'review_id', 'user_id', ...
         return reviews.map((r) => ({
             id: r.review_id,
             content: r.review_content,
@@ -85,11 +79,6 @@ export class ReviewService {
     }
 
     async findByUser(userId: number) {
-        // return this.reviewRepo.find({
-        //     where: { user: { id: userId } },
-        //     relations: ['movie'],
-        //     order: { createdAt: 'DESC' },
-        // });
         const reviews = await this.reviewRepo
             .createQueryBuilder('review')
             .leftJoinAndSelect('review.user', 'u')
@@ -108,8 +97,6 @@ export class ReviewService {
             ])
             .orderBy('review.createdAt', 'DESC')
             .getRawMany();
-
-        // getRawMany trả về cột dạng alias: 'review_id', 'user_id', ...
         return reviews.map((r) => ({
             id: r.review_id,
             content: r.review_content,
@@ -125,7 +112,7 @@ export class ReviewService {
         }));
     }
 
-    // User chấm điểm (nếu đã có => update)
+    // User rate movie (if exist => update)
     async rateMovie(userId: number, movieId: number, score: number) {
         if (score < 0 || score > 10) {
             throw new Error('Điểm rating phải nằm trong khoảng 0-10');
@@ -154,7 +141,7 @@ export class ReviewService {
         }
     }
 
-    // Lấy trung bình điểm của 1 phim
+    // get average rating
     async getAverageRating(tmdbId: number) {
         const result = await this.ratingRepo
             .createQueryBuilder('rating')
@@ -166,7 +153,7 @@ export class ReviewService {
         return Number(result.avg) || 0;
     }
 
-    // Lấy danh sách phim user đã rating
+    // get user ratings
     async getUserRatings(userId: number) {
         return this.ratingRepo.find({
             where: { user: { id: userId } },
@@ -177,7 +164,7 @@ export class ReviewService {
     async reactToReview(userId: number, dto: CreateReviewReactionDto) {
         const { reviewId, type } = dto;
 
-        // Kiểm tra review tồn tại
+        // check review
         const review = await this.reviewRepo.findOne({
             where: { id: reviewId },
         });
@@ -185,13 +172,13 @@ export class ReviewService {
             throw new NotFoundException('Review not found');
         }
 
-        // Kiểm tra user đã react trước đó chưa
+        // check user has react to review
         const existing = await this.reactionRepo.findOne({
             where: { user: { id: userId }, review: { id: reviewId } },
             relations: ['user', 'review'],
         });
 
-        // Nếu chưa từng react → tạo mới
+        // if existing -> create
         if (!existing) {
             const newReaction = this.reactionRepo.create({
                 type,
@@ -203,13 +190,11 @@ export class ReviewService {
             return { message: `You ${type}d this review.` };
         }
 
-        // Nếu nhấn cùng type → bỏ like/dislike
         if (existing.type === type) {
             await this.reactionRepo.remove(existing);
             return { message: `${type} removed.` };
         }
 
-        // Nếu đổi từ like → dislike hoặc ngược lại
         existing.type = type;
         await this.reactionRepo.save(existing);
 

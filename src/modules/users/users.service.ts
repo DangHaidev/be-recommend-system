@@ -1,7 +1,6 @@
 import {
     BadRequestException,
     Injectable,
-    InternalServerErrorException,
     NotFoundException,
 } from '@nestjs/common';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -13,7 +12,6 @@ import { hashPasswordhelper } from '../../helper/util';
 import { CodeAuthDto, CreateAuthDto } from 'src/auth/dto/create-auth.dto';
 import dayjs from 'dayjs';
 import { MailerService } from '@nestjs-modules/mailer';
-import e from 'express';
 import { UpdateUserDto } from './dto/update-user.dto';
 
 @Injectable()
@@ -142,7 +140,7 @@ export class UserService {
             subject: 'Welcome to rcmsys', // Subject line
             template: 'register',
             context: {
-                // ✏️ filling curly brackets with content
+                // filling curly brackets with content
                 name: newUser.name,
                 activationCode: activecodeId,
             },
@@ -196,7 +194,7 @@ export class UserService {
             subject: 'Resend code', // Subject line
             template: 'register',
             context: {
-                // ✏️ filling curly brackets with content
+                //filling curly brackets with content
                 name: user.name,
                 activationCode: activecodeId,
             },
